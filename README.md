@@ -106,6 +106,7 @@ cd analise-linkedin
    ```
 
 3. Crie um arquivo `.env` na raiz do Back-End e adicione:
+⚠️ Observação: O arquivo .env deste projeto já está configurado com as credenciais e links de acesso necessários (PhantomBuster, Google Sheets, etc.).
 
    ```bash
    PORT=8080
@@ -117,7 +118,7 @@ cd analise-linkedin
    LOCAL_RESULTS_CSV=./data/result.csv
    ```
 
-4. Execute o servidor:
+5. Execute o servidor:
    ```bash
    npm run dev
    ```
