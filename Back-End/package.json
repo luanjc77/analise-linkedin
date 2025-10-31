@@ -1,20 +1,30 @@
 {
-  "name": "back-end",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "analise-linkedin-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon servidor.js"
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint ."
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
+    "axios": "^1.7.7",
+    "corns": "^0.0.0",
     "cors": "^2.8.5",
-    "express": "^5.1.0"
+    "csv-parse": "^5.5.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "i": "^0.3.7",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.30",
+    "eslint": "^9.11.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.3"
   }
 }
