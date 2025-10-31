@@ -1,8 +1,10 @@
-# 🧠 Análise de Aderência — Perfis LinkedIn
+# Análise de Aderência — Perfis LinkedIn
 
 Aplicação completa (frontend + backend) para **analisar a aderência de candidatos do LinkedIn a uma vaga de emprego**, com base em dados coletados automaticamente via **PhantomBuster Scraper** e critérios definidos pelo recrutador.
 
 ---
+<img width="2060" height="1332" alt="image" src="https://github.com/user-attachments/assets/f3db37a4-d699-4a7d-b82e-fb9feea5f3fa" />
+
 
 ## 🚀 Objetivo do Projeto
 
