@@ -3,6 +3,7 @@ import axios from 'axios';
 export type PhantomRunOptions = {
   sheetUrl?: string;
   profileUrls?: string[];
+  numberOfProfilesPerLaunch?: number;
 };
 
 export type PhantomRunResult = {
@@ -17,8 +18,10 @@ const PH_BASE = 'https://api.phantombuster.com/api/v2';
 function getEnv() {
   const key = process.env.PHANTOMBUSTER_API_KEY;
   const agentId = process.env.PHANTOMBUSTER_AGENT_ID;
+  const mode = (process.env.PHANTOMBUSTER_MODE || 'visitor').toLowerCase();
   if (!key || !agentId) throw new Error('PhantomBuster não configurado');
-  return { key, agentId };
+  if (!['visitor', 'scraper'].includes(mode)) throw new Error('PHANTOMBUSTER_MODE inválido (use visitor|scraper)');
+  return { key, agentId, mode };
 }
 
 function extractRunId(data: any): string | undefined {
@@ -31,20 +34,40 @@ function extractRunId(data: any): string | undefined {
   );
 }
 
-export async function launchPhantom(run: PhantomRunOptions): Promise<PhantomRunResult> {
-  const { key, agentId } = getEnv();
+function buildArgument(mode: 'visitor' | 'scraper', run: PhantomRunOptions) {
+  const hasUrls = !!(run.profileUrls && run.profileUrls.length);
+  const sheet = run.sheetUrl || process.env.PHANTOMBUSTER_SHEET_URL;
 
-  // monte o argumento seguindo UMA única fonte (sheet OU profileUrls)
-  let argument: Record<string, any> = { onlyGetFirstResult: false };
-
-  if (run.profileUrls && run.profileUrls.length > 0) {
-    argument.profileUrls = run.profileUrls;
-  } else {
-    argument.spreadsheetUrl = run.sheetUrl || process.env.PHANTOMBUSTER_SHEET_URL;
+  if (mode === 'visitor') {
+    const arg: Record<string, any> = { onlyGetFirstResult: false };
+    if (hasUrls) arg.profileUrls = run.profileUrls;
+    else arg.spreadsheetUrl = sheet;
+    return arg;
   }
 
-  // NÃO enviar sessionCookie/userAgent neste phantom (usa a auth salva na UI)
-  // argument.sessionCookie / argument.userAgent => REMOVIDOS
+  // --- modo scraper: injeta cookie/UA por argumento ---
+  const sessionCookie = process.env.PHANTOMBUSTER_SESSION_COOKIE;
+  const userAgent = process.env.PHANTOMBUSTER_USER_AGENT;
+  if (!sessionCookie || !userAgent) {
+    throw new Error('No modo scraper, configure PHANTOMBUSTER_SESSION_COOKIE e PHANTOMBUSTER_USER_AGENT no .env');
+  }
+
+  const arg: Record<string, any> = {
+    sessionCookie,
+    userAgent,
+    numberOfProfilesPerLaunch: run.numberOfProfilesPerLaunch || 10,
+  };
+
+  if (hasUrls) arg.profileUrls = run.profileUrls;
+  else arg.spreadsheetUrl = sheet;
+
+  return arg;
+}
+
+export async function launchPhantom(run: PhantomRunOptions): Promise<PhantomRunResult> {
+  const { key, agentId, mode } = getEnv();
+
+  const argument = buildArgument(mode as any, run);
 
   const resp = await axios.post(
     `${PH_BASE}/agents/launch`,
@@ -66,9 +89,8 @@ export async function launchPhantom(run: PhantomRunOptions): Promise<PhantomRunR
     } catch {}
   }
 
-  return { runId: runId || 'unknown', status: 'running', debug: { launchResponse: resp.data } };
+  return { runId: runId || 'unknown', status: 'running', debug: { launchResponse: resp.data, mode } };
 }
-
 
 export async function getRunStatus(runId: string): Promise<PhantomRunResult> {
   const { key } = getEnv();

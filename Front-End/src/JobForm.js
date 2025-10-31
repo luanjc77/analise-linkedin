@@ -1,201 +1,208 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 
-// helper: lê arquivo e devolve base64 (sem prefixo data:)
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Falha ao ler arquivo"));
-    reader.onload = () => {
-      const s = String(reader.result || "");
-      const base64 = s.split(",").pop(); // remove "data:text/csv;base64,"
-      resolve(base64);
-    };
-    reader.readAsDataURL(file);
-  });
-}
+const defaultJob = {
+  escolaridade: "",
+  conhecimentosObrigatorios: "python, sql, etl",
+  conhecimentosDesejados: "aws, airflow, spark",
+  tempoExperienciaMinAnos: 0,
+  cargo: "",
+  observacoes: "",
+};
 
-const ESCOLARIDADES = [
-  "fundamental",
-  "medio",
-  "tecnologo",
-  "superior",
-  "pos",
-  "mestrado",
-  "doutorado",
-  "indiferente",
-];
-
-export default function JobForm({ onAnalyze, disabled }) {
-  const [escolaridade, setEscolaridade] = useState("superior");
-  const [obrigatorios, setObrigatorios] = useState("python, sql, etl");
-  const [desejados, setDesejados] = useState("aws, airflow, spark");
-  const [tempo, setTempo] = useState(2);
-  const [cargo, setCargo] = useState("engenheiro de dados");
-  const [obs, setObs] = useState("");
-
-  // entradas opcionais para outras rotas
-  const [csvFile, setCsvFile] = useState(null);
+export default function JobForm({
+  onAnalyze,
+  onAppendLinks,
+  onRunScraper,
+  disabled,
+}) {
+  const [job, setJob] = useState(defaultJob);
+  const [linksText, setLinksText] = useState(
+    "https://www.linkedin.com/in/fulano/\nhttps://www.linkedin.com/in/beltrano/"
+  );
   const [csvUrl, setCsvUrl] = useState("");
   const [phantomRunId, setPhantomRunId] = useState("");
 
-  const obrigatoriosArr = useMemo(
-    () =>
-      obrigatorios
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-    [obrigatorios]
-  );
-  const desejadosArr = useMemo(
-    () =>
-      desejados
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-    [desejados]
-  );
+  const handleNumber = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
 
-  async function submit(e) {
+  const toJobSpec = () => ({
+    escolaridade: job.escolaridade.trim() || undefined,
+    conhecimentosObrigatorios: job.conhecimentosObrigatorios
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+    conhecimentosDesejados: job.conhecimentosDesejados
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+    tempoExperienciaMinAnos: handleNumber(job.tempoExperienciaMinAnos),
+    cargo: job.cargo.trim() || undefined,
+    observacoes: job.observacoes.trim() || undefined,
+  });
+
+  const handleAnalyzeClick = (e) => {
     e.preventDefault();
+    if (!onAnalyze) return;
+    const spec = toJobSpec();
+    onAnalyze({ job: spec, csvUrl: csvUrl.trim() || undefined, phantomRunId: phantomRunId.trim() || undefined });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
-    const job = {
-      escolaridade,
-      conhecimentosObrigatorios: obrigatoriosArr,
-      conhecimentosDesejados: desejadosArr,
-      tempoExperienciaMinAnos: Number(tempo) || 0,
-      cargo: cargo.trim() || undefined,
-      observacoes: obs.trim() || undefined,
-    };
+  const handleAppendLinksClick = async () => {
+    if (!onAppendLinks) return;
+    await onAppendLinks(linksText);
+  };
 
-    let csvBase64;
-    if (csvFile) {
-      csvBase64 = await fileToBase64(csvFile);
-    }
-
-    onAnalyze({
-      job,
-      csvBase64: csvBase64 || undefined,
-      csvUrl: csvUrl.trim() || undefined,
-      phantomRunId: phantomRunId.trim() || undefined,
-    });
-  }
+  const handleRunScraperClick = async () => {
+    if (!onRunScraper) return;
+    await onRunScraper();
+  };
 
   return (
-    <section className="card">
-      <div className="card-title">Descrição da vaga</div>
-      <form onSubmit={submit} className="grid">
-        <div className="field">
-          <label>Escolaridade</label>
-          <select
-            value={escolaridade}
-            onChange={(e) => setEscolaridade(e.target.value)}
-            disabled={disabled}
-          >
-            {ESCOLARIDADES.map((e) => (
-              <option key={e} value={e}>
-                {e}
-              </option>
-            ))}
-          </select>
+    <form className="card">
+      <h3 className="card-title">Configurar Vaga & Coleta</h3>
+
+      <div className="grid">
+        <div>
+          <label>Escolaridade (ex.: superior)</label>
+          <input
+            className="input"
+            value={job.escolaridade}
+            onChange={(e) => setJob({ ...job, escolaridade: e.target.value })}
+            placeholder="superior, bacharel, etc."
+          />
         </div>
 
-        <div className="field">
+        <div>
           <label>Conhecimentos obrigatórios (vírgula)</label>
           <input
-            type="text"
-            value={obrigatorios}
-            onChange={(e) => setObrigatorios(e.target.value)}
-            placeholder="ex.: python, sql, etl"
-            disabled={disabled}
+            className="input"
+            value={job.conhecimentosObrigatorios}
+            onChange={(e) =>
+              setJob({ ...job, conhecimentosObrigatorios: e.target.value })
+            }
+            placeholder="python, sql, etl"
           />
         </div>
 
-        <div className="field">
+        <div>
           <label>Conhecimentos desejados (vírgula)</label>
           <input
-            type="text"
-            value={desejados}
-            onChange={(e) => setDesejados(e.target.value)}
-            placeholder="ex.: aws, airflow, spark"
-            disabled={disabled}
+            className="input"
+            value={job.conhecimentosDesejados}
+            onChange={(e) =>
+              setJob({ ...job, conhecimentosDesejados: e.target.value })
+            }
+            placeholder="aws, airflow, spark"
           />
         </div>
 
-        <div className="field">
+        <div>
           <label>Tempo de experiência mínima (anos)</label>
           <input
             type="number"
-            min="0"
-            value={tempo}
-            onChange={(e) => setTempo(e.target.value)}
-            disabled={disabled}
+            className="input"
+            value={job.tempoExperienciaMinAnos}
+            onChange={(e) =>
+              setJob({ ...job, tempoExperienciaMinAnos: e.target.value })
+            }
+            placeholder="0"
           />
         </div>
 
-        <div className="field">
+        <div>
           <label>Cargo (opcional)</label>
           <input
-            type="text"
-            value={cargo}
-            onChange={(e) => setCargo(e.target.value)}
-            placeholder="ex.: engenheiro de dados"
-            disabled={disabled}
+            className="input"
+            value={job.cargo}
+            onChange={(e) => setJob({ ...job, cargo: e.target.value })}
+            placeholder="engenheiro de dados"
           />
         </div>
 
-        <div className="field" style={{ gridColumn: "1/-1" }}>
+        <div>
           <label>Observações (opcional)</label>
           <textarea
-            rows={2}
-            value={obs}
-            onChange={(e) => setObs(e.target.value)}
-            disabled={disabled}
+            className="textarea"
+            value={job.observacoes}
+            onChange={(e) => setJob({ ...job, observacoes: e.target.value })}
+            placeholder="termos bônus separados por vírgula"
+          />
+        </div>
+      </div>
+
+      <hr className="divider" />
+
+      <div className="grid">
+        <div style={{ gridColumn: "1 / -1" }}>
+          <label>Links de perfis (um por linha)</label>
+          <textarea
+            className="textarea"
+            rows={6}
+            value={linksText}
+            onChange={(e) => setLinksText(e.target.value)}
+            placeholder={`https://www.linkedin.com/in/fulano/\nhttps://www.linkedin.com/in/beltrano/`}
           />
         </div>
 
-        <hr className="divider" />
-
-        <div className="field">
-          <label>CSV de candidatos (opcional)</label>
-          <input
-            type="file"
-            accept=".csv,text/csv"
-            onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+        <div className="actions" style={{ gridColumn: "1 / -1" }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
             disabled={disabled}
-          />
-          <small>
-            Se não enviar, o backend usa o <code>LOCAL_RESULTS_CSV</code>.
-          </small>
-        </div>
+            onClick={handleAppendLinksClick}
+            title="Adiciona os links à planilha"
+          >
+            Adicionar links à planilha
+          </button>
 
-        <div className="field">
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={disabled}
+            onClick={handleRunScraperClick}
+            title="Dispara o Phantom para atualizar a base (CSV)"
+          >
+            Rodar Scraper
+          </button>
+        </div>
+      </div>
+
+      <hr className="divider" />
+
+      <div className="grid">
+        <div>
           <label>CSV URL (opcional)</label>
           <input
-            type="text"
+            className="input"
             value={csvUrl}
             onChange={(e) => setCsvUrl(e.target.value)}
             placeholder="https://.../result.csv"
-            disabled={disabled}
           />
         </div>
 
-        <div className="field">
+        <div>
           <label>Phantom runId (opcional)</label>
           <input
-            type="text"
+            className="input"
             value={phantomRunId}
             onChange={(e) => setPhantomRunId(e.target.value)}
             placeholder="se estiver aguardando o Phantom finalizar"
-            disabled={disabled}
           />
         </div>
 
-        <div className="actions" style={{ gridColumn: "1/-1" }}>
-          <button className="btn btn-primary btn-lg" type="submit" disabled={disabled}>
-            {disabled ? "Analisando…" : "Analisar"}
+        <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-start" }}>
+          <button
+            className="btn btn-success"
+            disabled={disabled}
+            onClick={handleAnalyzeClick}
+          >
+            Analisar
           </button>
         </div>
-      </form>
-    </section>
+      </div>
+    </form>
   );
 }
