@@ -1,4 +1,4 @@
-# Análise de Aderência — Perfis LinkedIn
+# Análise Perfis LinkedIn
 
 Aplicação completa (frontend + backend) para **analisar a aderência de candidatos do LinkedIn a uma vaga de emprego**, com base em dados coletados automaticamente via **PhantomBuster Scraper** e critérios definidos pelo recrutador.
 
