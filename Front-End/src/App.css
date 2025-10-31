@@ -215,6 +215,13 @@ h3, h4, h5 {
   opacity: 1;
 }
 
+/* Cor dos textos de label em preto */
+label {
+  color: #000; /* texto preto */
+  font-weight: 500;
+}
+
+
 /* responsivo */
 @media (max-width: 900px) {
   .grid { grid-template-columns: 1fr; }

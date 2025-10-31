@@ -1,70 +1,181 @@
-# Getting Started with Create React App
+# 🧠 Análise de Aderência — Perfis LinkedIn
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Aplicação completa (frontend + backend) para **analisar a aderência de candidatos do LinkedIn a uma vaga de emprego**, com base em dados coletados automaticamente via **PhantomBuster Scraper** e critérios definidos pelo recrutador.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🚀 Objetivo do Projeto
 
-### `npm start`
+O objetivo é **automatizar o processo de triagem de perfis do LinkedIn**, permitindo que o recrutador:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+1. Configure os **requisitos de uma vaga** (ex: conhecimentos, cargo, experiência mínima).
+2. Adicione **links de perfis do LinkedIn** (manualmente ou via planilha do Google Sheets).
+3. Execute um **scraper (PhantomBuster)** que coleta informações públicas dos perfis.
+4. Analise automaticamente os candidatos, gerando um **ranking de aderência**.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Tudo isso através de uma interface simples, moderna e visual — construída em React e com backend em Node.js.
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🧩 Arquitetura do Sistema
 
-### `npm run build`
+A solução é dividida em dois módulos principais:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### **1. Front-End**
+- Framework: **React.js (Create React App)**
+- Linguagem: **JavaScript**
+- Estilização: **CSS customizado (dark mode com responsividade)**
+- Comunicação com backend via **REST API**
+- Componentes principais:
+  - `App.js`: layout principal e controle de exibição
+  - `JobForm.js`: formulário principal com ações de scraping e análise
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### **2. Back-End**
+- Framework: **Express.js**
+- Linguagem: **TypeScript**
+- Ferramentas principais:
+  - **PhantomBuster API** → para executar o scraper de perfis do LinkedIn
+  - **Google Sheets API** → para adicionar/ler links de perfis da planilha
+  - **Axios + dotenv + CORS**
+  - **Módulos de serviço**:
+    - `phantom.ts`: integração com o PhantomBuster
+    - `sheets.ts`: controle da planilha do Google
+    - `parsing.ts`: leitura de CSVs
+    - `scoring.ts`: lógica de pontuação de candidatos
+- Estrutura:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+Back-End/
+├── src/
+│   ├── routes/
+│   │   ├── analyze.ts
+│   │   ├── scraper.ts
+│   │   └── sheets.ts
+│   ├── services/
+│   │   ├── phantom.ts
+│   │   ├── sheets.ts
+│   │   ├── parsing.ts
+│   │   └── scoring.ts
+│   └── index.ts
+├── .env
+├── package.json
+└── tsconfig.json
+```
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## ⚙️ Tecnologias Utilizadas
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+| Categoria | Ferramenta / Tecnologia | Descrição |
+|------------|------------------------|------------|
+| **Frontend** | React.js | Framework SPA para a interface |
+|  | CSS3 | Tema escuro e responsivo |
+| **Backend** | Node.js + Express | Servidor e rotas API REST |
+|  | TypeScript | Tipagem estática |
+|  | Axios | Comunicação com APIs externas |
+| **Scraping** | PhantomBuster | Captura de dados de perfis do LinkedIn |
+| **Banco temporário** | Google Sheets API | Base para envio e leitura dos links |
+| **Ambiente** | dotenv | Gerenciamento de variáveis |
+| **Controle de acesso** | CORS | Permite chamadas entre localhost:3000 ↔ 8080 |
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## ⚙️ Como Executar o Projeto
 
-## Learn More
+### 🧱 1. Clonar o Repositório
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+git clone https://github.com/luanjc77/analise-linkedin.git
+cd analise-linkedin
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+### ⚙️ 2. Configurar o Backend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1. Acesse a pasta:
+   ```bash
+   cd Back-End
+   ```
 
-### Analyzing the Bundle Size
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+3. Crie um arquivo `.env` na raiz do Back-End e adicione:
 
-### Making a Progressive Web App
+   ```bash
+   PORT=8080
+   PHANTOMBUSTER_API_KEY=<sua_chave_do_phantom>
+   PHANTOMBUSTER_AGENT_ID=<id_do_phantom_scraper>
+   PHANTOMBUSTER_SHEET_URL=<url_da_planilha_google>
+   GOOGLE_SERVICE_ACCOUNT_EMAIL=<email_da_service_account>
+   GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="<chave_privada>"
+   LOCAL_RESULTS_CSV=./data/result.csv
+   ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+4. Execute o servidor:
+   ```bash
+   npm run dev
+   ```
 
-### Advanced Configuration
+   O backend será iniciado em **http://localhost:8080**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
+### 🖥️ 3. Configurar o Frontend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+1. Abra um novo terminal e acesse:
+   ```bash
+   cd Front-End
+   ```
 
-### `npm run build` fails to minify
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+3. Execute o app React:
+   ```bash
+   npm start
+   ```
+
+   O frontend estará disponível em **http://localhost:3000**
+
+---
+
+### 🔍 4. Testar o Fluxo Completo
+
+1. Preencha os campos da vaga.  
+2. Adicione os links dos perfis do LinkedIn.  
+3. Clique em **“Adicionar links à planilha”**.  
+4. Clique em **“Rodar Scraper”** para executar o Phantom.  
+5. Após o scraping, clique em **“Analisar”** para gerar o ranking.
+
+---
+
+## 📊 Resultado Esperado
+
+- Lista com os **Top 5 candidatos mais aderentes**
+- Colunas:
+  - Nome
+  - Score
+  - Motivos (por que foi pontuado assim)
+  - Link direto para o perfil
+
+---
+
+## 💡 Melhorias Futuras
+
+- 🔄 Atualização automática da planilha ao rodar o scraper
+- 🤖 Inclusão de IA/NLP para análise semântica de descrições
+- 📈 Exportação de relatórios (PDF/CSV)
+- 🌐 Deploy automático no Vercel/Render
+
+---
+
+## 👨‍💻 Autor
+
+**Luan Jacomini Costa**  
+📧 [luan.jacomini@clinicorp.com](mailto:luan.jacomini@clinicorp.com)  
